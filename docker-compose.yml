@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ port
+      - "15672:15672" # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  consumer:
+    image: lahav97/cartservice:latest
+    container_name: consumer
+    ports:
+      - "5252:5252"  # Exposing consumer service on port 5253 to avoid port conflict
+    environment:
+      - ASPNETCORE_URLS=http://+:5252  
+      - RABBITMQ_HOST=rabbitmq  # Pointing to RabbitMQ container
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5252/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  producer:
+    image: lahav97/orderservice:latest
+    container_name: producer
+    ports:
+      - "5099:5099"  # Exposing producer service on port 5099
+    environment:
+      - ASPNETCORE_URLS=http://+:5099
+      - RABBITMQ_HOST=rabbitmq  # Pointing to RabbitMQ container
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
