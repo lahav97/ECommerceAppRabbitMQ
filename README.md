@@ -1,6 +1,6 @@
 # ECommerceAppRabbit - CartService
 
-####### Developer Information
+# Developer Information
 **Full Name:** Lahav Rabinovitz  
 **ID Number:** 209028349
 
